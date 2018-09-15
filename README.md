@@ -1,7 +1,7 @@
 # ASS2LRC
 This script can convert ASS subtitle file to common LRC lryics file.
 
-`usage: python .\ass2lrc.py [--help] -i \<inputfile\> -o \<outputfile\> [-t mileseconds]`
+`usage: python .\ass2lrc.py [--help] -i <inputfile> -o <outputfile> [-t mileseconds]`
 
 `-i --input      An ASS filename which will be converted to lrc.`
 
