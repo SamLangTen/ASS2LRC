@@ -68,6 +68,13 @@ class ass_dialogue(object):
         self.style = style
         self.text = text
 
+def ass_styles_filter(dialogues, styles):
+    new_dialogues = list()
+    for style_item in dialogues:
+        if style_item.style in styles:
+            new_dialogues.append(style_item)
+    return new_dialogues
+
 def convert_to_normal_lrc(dialogues, space_end_timespan_ms):
     generated_text = ""
     dialogues.sort()
