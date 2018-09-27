@@ -1,5 +1,6 @@
-#Ignore Test ASS
+#Ignore Test ASS/LRC
 *.ass
+*.lrc
 #Ignore vscode
 .vscode
 # Byte-compiled / optimized / DLL files
