@@ -34,7 +34,9 @@ class ass_dialogue(object):
                     first_re = re.match(r"(\{[^{]*\}){0,1}[^{]*", last_text)
                     if first_re is None or first_re.group() == "":
                         break
-                    last_text = last_text.replace(first_re.group(), "")
+                    re_start_index = last_text.find(first_re.group())
+                    re_end_index = last_text.find(first_re.group()) + len(first_re.group())
+                    last_text = last_text[:re_start_index] + last_text[re_end_index:]
                     item = first_re.group()
                     # get K
                     ec_match = re.match(r"\{\\[K|k]\d*\}", item)
@@ -92,7 +94,8 @@ def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
     # Generate
     i = 0
     while len(dialogues) > 0:
-        this_line_generated_text = __generate_lrc_timestamp(dialogues[i].start_time)
+        this_line_generated_text = __generate_lrc_timestamp(
+            dialogues[i].start_time)
         j = i + 1
         this_line_text = __convert_ass_effect_word_to_text(dialogues[i].text)
         while j < len(dialogues):
