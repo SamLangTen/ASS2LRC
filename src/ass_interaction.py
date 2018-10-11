@@ -12,7 +12,9 @@ class ass_dialogue_word(object):
 
 
 class ass_dialogue(object):
-
+    '''
+    Represents an ass dialogue
+    '''
     @staticmethod
     def load_lrc(filename):
         dialogues = list()
@@ -30,19 +32,24 @@ class ass_dialogue(object):
                 no_k_text = ""
                 last_text = ""
                 last_text = last_text.join(phrased[9:])
+                last_time = start_time
                 while True:
                     first_re = re.match(r"(\{[^{]*\}){0,1}[^{]*", last_text)
                     if first_re is None or first_re.group() == "":
                         break
                     re_start_index = last_text.find(first_re.group())
-                    re_end_index = last_text.find(first_re.group()) + len(first_re.group())
-                    last_text = last_text[:re_start_index] + last_text[re_end_index:]
+                    re_end_index = last_text.find(
+                        first_re.group()) + len(first_re.group())
+                    last_text = last_text[:re_start_index] + \
+                        last_text[re_end_index:]
                     item = first_re.group()
                     # get K
                     ec_match = re.match(r"\{\\[K|k]\d*\}", item)
                     if (ec_match is not None):
-                        word = ass_dialogue_word(item.replace(re.match(r"\{\\[K|k]\d*\}", item).group(), ""), start_time + datetime.timedelta(
-                            milliseconds=int(ec_match.group().lower().replace("{\k", "").replace("}", "")) * 10))
+                        word = ass_dialogue_word(item.replace(
+                            re.match(r"\{\\[K|k]\d*\}", item).group(), ""), last_time)
+                        last_time = last_time + datetime.timedelta(milliseconds=int(
+                            ec_match.group().lower().replace("{\k", "").replace("}", "")) * 10)
                         if not word.word == "":
                             words.append(word)
                     else:
@@ -80,6 +87,31 @@ def ass_styles_filter(dialogues, styles):
     return new_dialogues
 
 
+def convert_to_accurate_lrc(dialogues, space_end_timespan_ms, outter_char="[mm:ss.xx]"):
+    generated_text = ""
+    dialogues.sort()
+    for index, item in enumerate(dialogues):
+        lryic = __generate_lrc_timestamp(item.start_time)
+        if isinstance(item.text, list):
+            text = ""
+            for item2 in item.text:
+                text += __generate_lrc_timestamp(item2.start_time, outter_char) + item2.word
+            lryic += text
+        else:
+            lryic += item.text
+        generated_text += lryic + "\n"
+        # append ending
+        if not index == len(dialogues) - 1:
+            td = dialogues[index + 1].start_time - item.end_time
+            if td.total_seconds() * 1000 > space_end_timespan_ms:
+                lryic = __generate_lrc_timestamp(item.end_time)
+                generated_text += lryic + "\n"
+        else:
+            lryic = __generate_lrc_timestamp(item.end_time)
+            generated_text += lryic + "\n"
+    return generated_text 
+
+
 def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
     generated_text = ""
     dialogues.sort()
@@ -89,8 +121,11 @@ def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
         if not index == len(dialogues) - 1:
             td = dialogues[index + 1].start_time - item.end_time
             if td.total_seconds() * 1000 > space_end_timespan_ms:
-                lryic = __generate_lrc_timestamp(item.start_time)
+                lryic = __generate_lrc_timestamp(item.end_time)
                 blanks_dialogues.append(lryic)
+        else:
+            lryic = __generate_lrc_timestamp(item.end_time)
+            blanks_dialogues.append(lryic)
     # Generate
     i = 0
     while len(dialogues) > 0:
@@ -112,10 +147,21 @@ def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
     return generated_text
 
 
-def __generate_lrc_timestamp(dt):
-    return "[" + str(dt.minute).zfill(2) + ":" + \
-        str(dt.second).zfill(2) + "." + \
-        str(int(dt.microsecond/10000)).zfill(2) + "]"
+def __generate_lrc_timestamp(dt, format_str="[mm:ss.xx]"):
+    m_digits = str(dt.minute).zfill(format_str.count("m"))
+    s_digits = str(dt.second).zfill(format_str.count("s"))
+    x_digits = str(int(dt.microsecond / 10000)).zfill(format_str.count("x"))
+    # TODO: check re return if nonetype
+    m_group = re.search("m+", format_str)
+    if m_group is not None:
+        format_str = format_str.replace(m_group.group(), m_digits)
+    s_group = re.search("s+", format_str)
+    if s_group is not None:
+        format_str = format_str.replace(s_group.group(), s_digits)
+    x_group = re.search("x+", format_str)
+    if x_group is not None:
+        format_str = format_str.replace(x_group.group(), x_digits)
+    return format_str
 
 
 def __convert_ass_effect_word_to_text(text):
@@ -145,9 +191,9 @@ def convert_to_normal_lrc(dialogues, space_end_timespan_ms):
         if not index == len(dialogues) - 1:
             td = dialogues[index + 1].start_time - item.end_time
             if td.total_seconds() * 1000 > space_end_timespan_ms:
-                lryic = __generate_lrc_timestamp(item.start_time)
+                lryic = __generate_lrc_timestamp(item.end_time)
                 generated_text += lryic + "\n"
         else:
-            lryic = __generate_lrc_timestamp(item.start_time)
+            lryic = __generate_lrc_timestamp(item.end_time)
             generated_text += lryic + "\n"
     return generated_text
