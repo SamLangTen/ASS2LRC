@@ -4,7 +4,7 @@ import getopt
 
 def display_usage(name):
     print("usage: python " + name +
-          " [--help] -i <inputfile> -o <outputfile> [-t mileseconds] [-s stylename] [-c|-a] [-f [mm:ss.xx]")
+          " [--help] -i <inputfile> -o <outputfile> [-t mileseconds] [-s stylename] [-c|-a] [-f [mm:ss.xx]]")
     print("")
     print("-i --input\tAn ASS filename which will be converted to lrc")
     print("-o --output\tA LRC filename where the convered text will be stored")
