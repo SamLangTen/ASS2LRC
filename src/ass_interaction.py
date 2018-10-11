@@ -5,18 +5,53 @@ import time
 
 
 class ass_dialogue_word(object):
+    """Represents a word with k-tag in ASS dialogue
+    
+    Attributes:
+        word: A string of the word with k-tag.
+        start_time: A datetime instance to represent start time of the word.
+    """
 
     def __init__(self, word, start_time):
+        """Init ass_dialogue_word"""
         self.word = word
         self.start_time = start_time
 
 
 class ass_dialogue(object):
-    '''
-    Represents an ass dialogue
-    '''
+    """Represents an ASS dialogue
+
+    Attributes:
+        start_time: A datetime instance to represent start time of ASS dialogue.
+        end_time: A datetime instance to represent end time of ASS dialogue.
+        style: A string to represent style of ASS dialogue, usually to define different dialogues.
+        text: A string if dialogue does not contain k-tag, or a list of ass_dialogue_word instances if dialogue contains k-tag.
+    """
+
+    def __init__(self, start_time, end_time, style, text):
+        """Init ass_dialogue"""
+        self.start_time = start_time
+        self.end_time = end_time
+        self.style = style
+        self.text = text
+
+    def __lt__(self, other):
+        if self.start_time < other.start_time:
+            return True
+        return False
+
     @staticmethod
     def load_lrc(filename):
+        """Load and parse ASS file
+
+        Load and parse ASS file. Not all the information and dialogue option will be parsed. This function only parse dialogue with its style, start time, end time and text. Any effect tag except K-tag will be removed.
+
+        Args:
+            filename: A string of ASS filename that will be loaded.
+
+        Returns:
+            A list of ass_dialogue instances.
+        """
         dialogues = list()
         files = open(filename, "r")
         for line in files:
@@ -67,19 +102,44 @@ class ass_dialogue(object):
         files.close()
         return dialogues
 
-    def __lt__(self, other):
-        if self.start_time < other.start_time:
-            return True
-        return False
 
-    def __init__(self, start_time, end_time, style, text):
-        self.start_time = start_time
-        self.end_time = end_time
-        self.style = style
-        self.text = text
+def __generate_lrc_timestamp(dt, format_str="[mm:ss.xx]"):
+    m_digits = str(dt.minute).zfill(format_str.count("m"))
+    s_digits = str(dt.second).zfill(format_str.count("s"))
+    x_digits = str(int(dt.microsecond / 10000)).zfill(format_str.count("x"))
+    # TODO(samlangten): check re return if nonetype
+    m_group = re.search("m+", format_str)
+    if m_group is not None:
+        format_str = format_str.replace(m_group.group(), m_digits)
+    s_group = re.search("s+", format_str)
+    if s_group is not None:
+        format_str = format_str.replace(s_group.group(), s_digits)
+    x_group = re.search("x+", format_str)
+    if x_group is not None:
+        format_str = format_str.replace(x_group.group(), x_digits)
+    return format_str
+
+
+def __convert_ass_effect_word_to_text(text):
+    if isinstance(text, list):
+        text2 = ""
+        for item2 in text:
+            text2 += item2.word
+        return text2
+    else:
+        return text
 
 
 def ass_styles_filter(dialogues, styles):
+    """Select specified styles in ASS dialogues
+    
+    Args:
+        dialogues: A list of ass_dialogues instance.
+        styles: A list of strings to indicate the dialogues with which styles will be kepts
+
+    Returns:
+        A list of ass_dialogues instances with style in styles
+    """
     new_dialogues = list()
     for style_item in dialogues:
         if style_item.style in styles:
@@ -88,6 +148,18 @@ def ass_styles_filter(dialogues, styles):
 
 
 def convert_to_accurate_lrc(dialogues, space_end_timespan_ms, outter_char="[mm:ss.xx]"):
+    """ Convert K-tag ASS dialogues to accurate LRC lyrics
+    
+    Convert Karaoke-tag of ASS file to accurate word-by-word timestamp.
+    Notice that accurate timestamp is not supported by all players.
+
+    Args:
+        dialogues: A list of ass_dialogue instances.
+        space_end_timespan_ms: A integer to indicate how long between two dialogues will blankline be added.
+    
+    Returns:
+        A string contains converted LRC format text.
+    """
     generated_text = ""
     dialogues.sort()
     for index, item in enumerate(dialogues):
@@ -95,7 +167,8 @@ def convert_to_accurate_lrc(dialogues, space_end_timespan_ms, outter_char="[mm:s
         if isinstance(item.text, list):
             text = ""
             for item2 in item.text:
-                text += __generate_lrc_timestamp(item2.start_time, outter_char) + item2.word
+                text += __generate_lrc_timestamp(item2.start_time,
+                                                 outter_char) + item2.word
             lryic += text
         else:
             lryic += item.text
@@ -109,10 +182,22 @@ def convert_to_accurate_lrc(dialogues, space_end_timespan_ms, outter_char="[mm:s
         else:
             lryic = __generate_lrc_timestamp(item.end_time)
             generated_text += lryic + "\n"
-    return generated_text 
+    return generated_text
 
 
 def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
+    """ Convert ASS dialogues to LRC lyrics with compact mode.
+
+    Convert ASS dialogues to compacted LRC lyrics. Every two dialogues with text will share the same timestamp.
+    Notice that compacted timestamp is not supported by all players.
+
+    Args:
+        dialogues: A list of ass_dialogue instances.
+        space_end_timespan_ms: A integer to indicate how long between two dialogues will blankline be added.
+
+    Returns:
+        A string contains converted LRC format text.
+    """
     generated_text = ""
     dialogues.sort()
     blanks_dialogues = list()
@@ -147,34 +232,16 @@ def convert_to_compact_lrc(dialogues, space_end_timespan_ms):
     return generated_text
 
 
-def __generate_lrc_timestamp(dt, format_str="[mm:ss.xx]"):
-    m_digits = str(dt.minute).zfill(format_str.count("m"))
-    s_digits = str(dt.second).zfill(format_str.count("s"))
-    x_digits = str(int(dt.microsecond / 10000)).zfill(format_str.count("x"))
-    # TODO: check re return if nonetype
-    m_group = re.search("m+", format_str)
-    if m_group is not None:
-        format_str = format_str.replace(m_group.group(), m_digits)
-    s_group = re.search("s+", format_str)
-    if s_group is not None:
-        format_str = format_str.replace(s_group.group(), s_digits)
-    x_group = re.search("x+", format_str)
-    if x_group is not None:
-        format_str = format_str.replace(x_group.group(), x_digits)
-    return format_str
-
-
-def __convert_ass_effect_word_to_text(text):
-    if isinstance(text, list):
-        text2 = ""
-        for item2 in text:
-            text2 += item2.word
-        return text2
-    else:
-        return text
-
-
 def convert_to_normal_lrc(dialogues, space_end_timespan_ms):
+    """ Convert ASS dialogues to LRC lyrics.
+
+    Args:
+        dialogues: A list of ass_dialogue instances.
+        space_end_timespan_ms: A integer to indicate how long between two dialogues will blankline be added.
+
+    Returns:
+        A string contains converted LRC format text.
+    """
     generated_text = ""
     dialogues.sort()
     for index, item in enumerate(dialogues):
