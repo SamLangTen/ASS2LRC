@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <ass/ass.h>
 #include <ass/ass_types.h>
+
 #include "lrc_type.h"
-#include "lrc.c"
+#include "lrc.h"
 
 int ass_event_asccmp(const ASS_Event *a, const ASS_Event *b)
 {
@@ -26,13 +27,22 @@ int main(int argc, char *argv[])
     }
 
     qsort(track->events, track->n_events, sizeof(ASS_Event), ass_event_asccmp);
-    for (int i = 0; i < track->n_events; i++)
+    lrc_file *lrc = lrc_parse_ass_subtitle(track, 1000);
+    for (int i = 0; i < lrc->n_sentence; i++)
     {
-        //printf("%d %lld %s\n", i + 1, track->events[i].Start, track->events[i].Text);
-        lrc_parse_ass_subtitle(track, 1000);
-    }
+        printf("%d: %lld, %s\n", i + 1, lrc->sentences[i].start, lrc->sentences[i].is_accurate ? "AC" : "NA");
+        if (!lrc->sentences[i].is_accurate)
+        {
+            printf("  %s\n\n", lrc->sentences[i].content.text);
+            continue;
+        }
 
-    lrc_sentence s;
+        for (int j = 0; j < lrc->sentences[i].content.word.n_word; j++)
+        {
+            printf("  %s for %lldms\n", lrc->sentences[i].content.word.words[j].text, lrc->sentences[i].content.word.words[j].duration);
+        }
+        printf("\n");
+    }
 
     ass_free_track(track);
     ass_library_done(ass_library);

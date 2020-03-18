@@ -1,16 +1,10 @@
-#include "lrc_type.h"
-#include <ass/ass_types.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ass/ass_types.h>
 
-typedef enum _ASS_EFFECT_TOKEN
-{
-    TEXT,
-    KARAOKE,
-    EFFECT,
-    END
-} ASS_EFFECT_TOKEN;
+#include "lrc_type.h"
+#include "lrc.h"
 
 /*
  * An token analyze for ass event.
@@ -110,16 +104,36 @@ normal_text:
     return TEXT;
 }
 
-static lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
+lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
 {
+    lrc_file *lrc = (lrc_file *)malloc(sizeof(lrc_file));
+    lrc->album = 0;
+    lrc->artist = 0;
+    lrc->author = 0;
+    lrc->file_maker = 0;
+    lrc->file_program_name = 0;
+    lrc->file_program_version = 0;
+    lrc->offset = 0;
+    lrc->title = 0;
+
+    lrc->sentences = (lrc_sentence *)malloc(sizeof(lrc_sentence) * (ass_track->n_events * 2));
+    lrc->n_sentence = 0;
+
     for (int i = 0; i < ass_track->n_events; i++)
     {
+
+        int word_max = 5;
+        int word_count = 0;
+        lrc_word *words = (lrc_word *)malloc(sizeof(lrc_word) * word_max);
+        words[0].duration = 0;
+
         printf("%d: %s\n", i + 1, ass_track->events[i].Text);
         int pos = 0;
         void *token_info;
 
         while (1)
         {
+
             ASS_EFFECT_TOKEN token = ass_event_analyze(ass_track->events[i].Text, &pos, &token_info);
 
             if (token == END)
@@ -128,20 +142,90 @@ static lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_ti
             switch (token)
             {
             case TEXT:
-                printf("TEXT: %s\n", (char *)token_info);
-                free(token_info);
+                words[word_count].text = (char *)token_info;
+                word_count++;
+
+                if (word_count >= word_max)
+                {
+                    words = realloc(words, sizeof(lrc_word) * (word_max += 5));
+                }
+
                 break;
             case KARAOKE:
-                printf("KARAOKE: %lldms\n", *(long long *)token_info);
+                words[word_count].duration = *(long long *)token_info;
                 free(token_info);
                 break;
             case EFFECT:
-                printf("EFFECT\n");
                 break;
             default:
                 break;
             }
         }
-        printf("\n");
+
+        /* Construct lrc_sentence */
+        lrc_sentence *sen = &lrc->sentences[lrc->n_sentence];
+        sen->start = ass_track->events[i].Start;
+
+        if (word_count == 1 && words[0].duration == 0) /* No karaoke effect */
+        {
+            sen->content.text = words[0].text;
+            sen->is_accurate = 0;
+            free(words);
+        }
+        else
+        {
+            sen->content.word.n_word = word_count;
+            sen->content.word.words = words;
+            sen->is_accurate = 1;
+        }
+        lrc->n_sentence++;
+
+        /* Check timespan */
+        if (i == ass_track->n_events - 1 || ass_track->events[i].Start + ass_track->events[i].Duration - ass_track->events[i].Start > split_timespan)
+        {
+            sen = &lrc->sentences[lrc->n_sentence];
+            sen->is_accurate = 0;
+            sen->start = ass_track->events[i].Start + ass_track->events[i].Duration;
+            char *empty_str = (char *)malloc(sizeof(char));
+            empty_str[0] = 0;
+            sen->content.text = empty_str;
+            lrc->n_sentence++;
+        }
     }
+
+    return lrc;
+}
+
+void lrc_file_free(lrc_file *lrc)
+{
+    for (int i = 0; i < lrc->n_sentence; i++)
+    {
+        if (lrc->sentences[i].is_accurate == 0)
+        {
+            free(lrc->sentences[i].content.text);
+            continue;
+        }
+
+        /* Free Accurate Mode Resource */
+        for (int j = 0; j < lrc->sentences[i].content.word.n_word; j++)
+        {
+            free(lrc->sentences[i].content.word.words[j].text);
+        }
+        free(lrc->sentences[i].content.word.words);
+    }
+    free(lrc->sentences);
+    if (!lrc->album)
+        free(lrc->album);
+    if (!lrc->artist)
+        free(lrc->artist);
+    if (!lrc->title)
+        free(lrc->title);
+    if (!lrc->file_maker)
+        free(lrc->file_maker);
+    if (!lrc->file_program_name)
+        free(lrc->file_program_name);
+    if (!lrc->file_program_version)
+        free(lrc->file_program_version);
+    if (!lrc->title)
+        free(lrc->title);
 }

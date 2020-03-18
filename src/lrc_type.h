@@ -3,14 +3,20 @@
 
 typedef struct _lrc_word
 {
-    long long start;
+    long long duration;
     char *text;
 } lrc_word;
+
+typedef struct _lrc_word_list
+{
+    lrc_word *words;
+    int n_word;
+} lrc_word_list;
 
 typedef struct _lrc_sentence
 {
     union _content {
-        lrc_word word;
+        lrc_word_list word;
         char *text;
     } content;
     unsigned int is_accurate;
