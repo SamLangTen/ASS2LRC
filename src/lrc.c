@@ -104,6 +104,11 @@ normal_text:
     return TEXT;
 }
 
+static int ass_event_asccmp(const ASS_Event *a, const ASS_Event *b)
+{
+    return (a->Start > b->Start) ? 1 : 0;
+}
+
 lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
 {
     lrc_file *lrc = (lrc_file *)malloc(sizeof(lrc_file));
@@ -119,6 +124,7 @@ lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
     lrc->sentences = (lrc_sentence *)malloc(sizeof(lrc_sentence) * (ass_track->n_events * 2));
     lrc->n_sentence = 0;
 
+    qsort(ass_track->events, ass_track->n_events, sizeof(ASS_Event), ass_event_asccmp);
     for (int i = 0; i < ass_track->n_events; i++)
     {
 
@@ -127,7 +133,6 @@ lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
         lrc_word *words = (lrc_word *)malloc(sizeof(lrc_word) * word_max);
         words[0].duration = 0;
 
-        printf("%d: %s\n", i + 1, ass_track->events[i].Text);
         int pos = 0;
         void *token_info;
 
@@ -181,7 +186,7 @@ lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
         lrc->n_sentence++;
 
         /* Check timespan */
-        if (i == ass_track->n_events - 1 || ass_track->events[i].Start + ass_track->events[i].Duration - ass_track->events[i].Start > split_timespan)
+        if (i == ass_track->n_events - 1 || ass_track->events[i + 1].Start - (ass_track->events[i].Start + ass_track->events[i].Duration) > split_timespan)
         {
             sen = &lrc->sentences[lrc->n_sentence];
             sen->is_accurate = 0;

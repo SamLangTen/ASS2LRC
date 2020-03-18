@@ -5,10 +5,7 @@
 #include "lrc_type.h"
 #include "lrc.h"
 
-int ass_event_asccmp(const ASS_Event *a, const ASS_Event *b)
-{
-    return (a->Start > b->Start) ? 1 : 0;
-}
+
 
 int main(int argc, char *argv[])
 {
@@ -26,8 +23,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    qsort(track->events, track->n_events, sizeof(ASS_Event), ass_event_asccmp);
-    lrc_file *lrc = lrc_parse_ass_subtitle(track, 1000);
+
+    lrc_file *lrc = lrc_parse_ass_subtitle(track, 100);
     for (int i = 0; i < lrc->n_sentence; i++)
     {
         printf("%d: %lld, %s\n", i + 1, lrc->sentences[i].start, lrc->sentences[i].is_accurate ? "AC" : "NA");
