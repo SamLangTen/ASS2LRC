@@ -1,20 +1,14 @@
 # ASS2LRC
 ## Introduction
-This script can convert ASS subtitle file to common LRC lryics file.
+This program can convert ASS subtitle file to common LRC lryics file.
 
-    usage: python .\ass2lrc.py [--help] -i <inputfile> -o <outputfile> [-t mileseconds] [-s stylename] [-c|-a] [-f [mm:ss.xx]]
+    usage: ass2lrc [--help] -i <inputfile> -o <outputfile> [-t mileseconds]
     
     -i --input              An ASS filename which will be converted to lrc
     -o --output             A LRC filename where the convered text will be stored
     -t --split_timespan     A new blank line will be added if the start time of two between dialogues greater than this argument, default is 1000ms
-    -s --convert_styles     A filter to decide which style of dialogue in ASS should be converted into LRC file
-    -c --compact            Combine timestamp of dialogues with same text, not supported by all player
-    -a --accurate           Convert Karaoke-tag of ASS file to accurate word-by-word timestamp, not supported by all players. Not compatible with compact option
-    -f --accurate_format    Used with accurate option, to set format of accurate word-by-word timestamp since every player may have its own accurate timestamp
 
-Since LRC file does not support ending timestamp, some lryics followed with a long period time of music will be "frozen". This script can add a new blank lyrics whose start timestamp is ending timestamp of the former lyrics. If timespan between the former ending time and the latter start time is greater than option split_timespan, a new blank line will be added.
-
-Some ASS files may contain more than one kind of style because different style represents different kind of subtitle. Convert Styles setting can filter the dialogues with style which you want to convert into LRC dialogues.
+Since LRC file does not support ending timestamp, some lryics followed with a long period time of music will be "frozen". This program can add a new blank lyrics whose start timestamp is ending timestamp of the former lyrics. If timespan between the former ending time and the latter start time is greater than option split_timespan, a new blank line will be added.
 
 ## Examples
 The original ASS file
@@ -56,7 +50,7 @@ The original ASS file
     Dialogue: 0,0:00:24.44,0:00:26.44,InfoStyle,,0,0,0,,Lyrics by：Samersions
 
 ### Convert Directly
-    python ass2lrc.py -i input.ass -o output.lrc
+    ass2lrc -i input.ass -o output.lrc
 
 Result
 
@@ -81,8 +75,8 @@ Result
     [01:19.16]きっと きっと ってもう一度愿うから
     [01:27.44]
 
-### Convert with 10ms splitting timespan, selected Default style
-    python ass2lrc.py -i input.ass -o output.lrc -s Default -t 10
+### Convert with 10ms splitting timespan
+    ass2lrc -i input.ass -o output.lrc -t 10
 
 Result
 
@@ -91,7 +85,10 @@ Result
     [00:07.80]きっと きっと ってもう一度愿うから
     [00:17.04]
     [00:18.44]春奈るな - Overfly （TV size ver.）
-    [00:20.44]
+    [00:20.44]Author：Saku
+    [00:22.44]Composer：Saku
+    [00:24.44]Lyrics by：Samersions
+    [00:26.44]
     [00:28.86]とめどない想いは
     [00:32.06]
     [00:32.46]日常に饮まれて
@@ -109,53 +106,4 @@ Result
     [01:04.94]优しい光を目指して羽ばたくよ
     [01:12.08]心に灯した情热を抱いて
     [01:19.16]きっと きっと ってもう一度愿うから
-    [01:27.44]
-
-### Convert with compact mode
-
-    python ass2lrc.py -i input.ass -o output.lrc -c
-
-Result
-
-    [00:00.62][00:57.98]高く高く この手を伸ばして
-    [00:07.80][01:19.16]きっと きっと ってもう一度愿うから
-    [00:18.44]春奈るな - Overfly （TV size ver.）
-    [00:20.44]Author：Saku
-    [00:22.44]Composer：Saku
-    [00:24.44]Lyrics by：Samersions
-    [00:28.86]とめどない想いは
-    [00:32.46]日常に饮まれて
-    [00:36.08]揺らめきながらまた形を変えていった
-    [00:43.04]今さらもう遅いかな
-    [00:46.80]返事のない自问自答
-    [00:50.26]すべてはそう自分次第
-    [00:53.16]终わりも始まりも
-    [01:04.94]优しい光を目指して羽ばたくよ
-    [01:12.08]心に灯した情热を抱いて
-    [00:17.04][00:26.44][01:27.44] 
-    
-### Convert with accurate mode, accurate format is "\<mm:ss.xx\>"
-    python ass2lrc.py -i input.ass -o output.lrc -a -f <mm:ss.xx> 
-
-Result
-
-    [00:00.62]<00:00.62>高<00:01.34>く<00:02.40>高<00:03.09>く<00:04.21> <00:04.21>こ<00:04.64>の<00:04.88>手<00:05.14>を<00:05.58>伸<00:05.82>ば<00:06.24>し<00:06.66>て
-    [00:07.80]<00:07.80>き<00:08.24>っ<00:08.46>と<00:09.60> <00:09.60>き<00:09.98>っ<00:10.22>と<00:10.75> <00:10.85>っ<00:11.07>て<00:11.55>も<00:11.74>う<00:11.89>一<00:12.37>度<00:12.74>愿う<00:13.57>か<00:13.92>ら
-    [00:17.04]
-    [00:18.44]春奈るな - Overfly （TV size ver.）
-    [00:20.44]Author：Saku
-    [00:22.44]Composer：Saku
-    [00:24.44]Lyrics by：Samersions
-    [00:26.44]
-    [00:28.86]<00:28.86>と<00:29.07>め<00:29.36>ど<00:29.54>な<00:29.81>い<00:30.00>想<00:30.67>い<00:30.83>は
-    [00:32.46]<00:32.46>日<00:32.91>常<00:33.36>に<00:33.54>饮<00:33.78>ま<00:34.08>れ<00:34.38>て
-    [00:36.08]<00:36.08>揺<00:36.30>ら<00:36.52>め<00:36.71>き<00:36.94>な<00:37.17>が<00:37.60>ら<00:38.03>ま<00:38.46>た<00:38.89>形<00:39.85>を<00:40.50>変<00:40.92>え<00:41.35>て<00:41.66>い<00:42.03>った
-    [00:43.04]<00:43.04>今<00:43.42>さ<00:43.56>ら<00:43.69>も<00:44.07>う<00:44.47>遅<00:44.86>い<00:45.26>か<00:45.57>な
-    [00:46.80]<00:46.80>返<00:46.92>事<00:47.05>の<00:47.19>な<00:47.46>い<00:47.80>自<00:48.05>问<00:48.55>自<00:48.83>答
-    [00:50.26]<00:50.26>す<00:50.46>べ<00:50.60>て<00:50.71>は<00:50.81>そ<00:51.03>う<00:51.46>自<00:51.70>分<00:52.06>次<00:52.39>第
-    [00:53.16]<00:53.16>终<00:53.51>わ<00:54.26>り<00:54.42>も<00:55.06>始<00:55.71>ま<00:55.97>り<00:56.39>も<00:57.66>
-    [00:57.98]<00:57.98>高<00:58.65>く<00:59.69>高<01:00.41>く<01:01.45> <01:01.74>こ<01:02.02>の<01:02.24>手<01:02.49>を<01:02.84>伸<01:03.13>ば<01:03.48>し<01:03.96>て
-    [01:04.94]<01:04.94>优<01:05.46>し<01:05.91>い<01:06.57>光<01:07.58>を<01:08.73>目<01:09.14>指<01:09.38>し<01:09.61>て<01:10.04>羽<01:10.34>ば<01:10.74>た<01:11.14>く<01:11.35>よ
-    [01:12.08]<01:12.08>心<01:13.08>に<01:13.82>灯<01:14.36>し<01:14.79>た<01:15.84>情<01:16.52>热<01:17.21>を<01:17.49>抱<01:17.91>い<01:18.37>て
-    [01:19.16]<01:19.16>き<01:19.82>っと <01:21.16>き<01:21.75>っと <01:22.91>って<01:23.31>もう<01:23.63>一<01:24.01>度<01:24.42>愿う<01:25.24>か<01:25.51>ら
     [01:27.44]
