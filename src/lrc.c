@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ass/ass_types.h>
+#include <ctype.h>
 
 #include "lrc_type.h"
 #include "lrc.h"
@@ -18,7 +19,7 @@ static ASS_EFFECT_TOKEN ass_event_analyze(char *text, int *pos, void **token_inf
 
     if (text[*pos] == 0)
     {
-        *token_info = 0;
+        *token_info = NULL;
         return END;
     }
 
@@ -79,7 +80,7 @@ static ASS_EFFECT_TOKEN ass_event_analyze(char *text, int *pos, void **token_inf
                 }
                 (*pos)++;
 
-                *token_info = 0;
+                *token_info = NULL;
                 return EFFECT;
             }
         }
@@ -112,14 +113,14 @@ static int ass_event_asccmp(const ASS_Event *a, const ASS_Event *b)
 lrc_file *lrc_parse_ass_subtitle(ASS_Track *ass_track, long long split_timespan)
 {
     lrc_file *lrc = (lrc_file *)malloc(sizeof(lrc_file));
-    lrc->album = 0;
-    lrc->artist = 0;
-    lrc->author = 0;
-    lrc->file_maker = 0;
-    lrc->file_program_name = 0;
-    lrc->file_program_version = 0;
+    lrc->album = NULL;
+    lrc->artist = NULL;
+    lrc->author = NULL;
+    lrc->file_maker = NULL;
+    lrc->file_program_name = NULL;
+    lrc->file_program_version = NULL;
     lrc->offset = 0;
-    lrc->title = 0;
+    lrc->title = NULL;
 
     lrc->sentences = (lrc_sentence *)malloc(sizeof(lrc_sentence) * (ass_track->n_events * 2));
     lrc->n_sentence = 0;
