@@ -7,6 +7,14 @@
 #include "lrc_type.h"
 #include "lrc.h"
 
+typedef enum _ASS_EFFECT_TOKEN
+{
+    TEXT,
+    KARAOKE,
+    EFFECT,
+    END
+} ASS_EFFECT_TOKEN;
+
 /*
  * An token analyze for ass event.
  * If current token is TEXT, *token_info point to a *char.
