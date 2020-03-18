@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <ass/ass.h>
 #include <ass/ass_types.h>
+#include "lrc_type.h"
+#include "lrc.c"
 
 int ass_event_asccmp(const ASS_Event *a, const ASS_Event *b)
 {
@@ -26,8 +28,11 @@ int main(int argc, char *argv[])
     qsort(track->events, track->n_events, sizeof(ASS_Event), ass_event_asccmp);
     for (int i = 0; i < track->n_events; i++)
     {
-        printf("%d %lld %s\n", i + 1, track->events[i].Start, track->events[i].Text);
+        //printf("%d %lld %s\n", i + 1, track->events[i].Start, track->events[i].Text);
+        lrc_parse_ass_subtitle(track, 1000);
     }
+
+    lrc_sentence s;
 
     ass_free_track(track);
     ass_library_done(ass_library);
