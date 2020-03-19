@@ -5,7 +5,7 @@
 #include <ass/ass.h>
 #include <ass/ass_types.h>
 
-#include "lrc_type.h"
+#include "ass_lrc_parse.h"
 #include "lrc.h"
 
 int main(int argc, char *argv[])
